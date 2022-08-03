@@ -26,8 +26,12 @@ let data = {
 	]
 }
 
-app.get('/api/persons', (request, response) => {
-	response.json(data.persons)
+app.get('/info', (req, res) => {
+	res.send(`<p>Phonebook has info for ${data.persons.length} people</p><p>${new Date().toString()}</p>`)
+})
+
+app.get('/api/persons', (req, res) => {
+	res.json(data.persons)
 })
 
 const PORT = 3001;
