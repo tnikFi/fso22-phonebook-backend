@@ -25,23 +25,14 @@ app.get('/api/persons', (req, res) => {
 	})
 })
 
-app.post('/api/persons', (req, res) => {
-	const body = req.body
+app.post('/api/persons', (req, res, next) => {
+	const {name, number} = req.body
 
-	if (!body.name || !body.number) {
-		return res.status(400).json({error: 'content missing'})
-	}
-
-	const contact = new Contact({
-		name: body.name,
-		number: body.number
-	})
+	const contact = new Contact({name, number})
 
 	contact.save().then(result => {
 		res.json(contact)
-	}).catch(error => {
-		console.log('Failed to POST:', error.message)
-	})
+	}).catch(error => next(error))
 })
 
 app.get('/api/persons/:id', (req, res, next) => {
@@ -57,14 +48,9 @@ app.get('/api/persons/:id', (req, res, next) => {
 })
 
 app.put('/api/persons/:id', (req, res, next) => {
-	const body = req.body
+	const {name, number} = req.body
 
-	const contact = {
-		name: body.name,
-		number: body.number
-	}
-
-	Contact.findByIdAndUpdate(req.params.id, contact, { new: true })
+	Contact.findByIdAndUpdate(req.params.id, {name, number}, { new: true, runValidators: true, context: 'query' })
 		.then(updatedContact => {
 			res.json(updatedContact)
 		})
@@ -87,9 +73,16 @@ app.use(unknownEndpoint)
 
 const errorHandler = (error, request, response, next) => {
 	console.error(error.message)
-	if (error.name === 'CastError') {
-		return response.status(400).send({ error: 'malformatted id' })
+
+	switch (error.name) {
+		case 'CastError':
+			return response.status(400).send({ error: 'malformatted id' })
+		case 'ValidationError':
+			return response.status(400).send({ error: error.message })
+		default:
+			break;
 	}
+
 	next(error)
 }
 
