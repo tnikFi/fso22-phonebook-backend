@@ -5,7 +5,7 @@ const morgan = require('morgan')
 const app = express()
 const Contact = require('./models/Contact')
 
-morgan.token('body', (req, res) => req.method === 'POST' ? JSON.stringify(req.body) : '')
+morgan.token('body', (req) => req.method === 'POST' ? JSON.stringify(req.body) : '')
 
 app.use(express.static('build'))
 app.use(express.json())
@@ -30,7 +30,7 @@ app.post('/api/persons', (req, res, next) => {
 
 	const contact = new Contact({name, number})
 
-	contact.save().then(result => {
+	contact.save().then(() => {
 		res.json(contact)
 	}).catch(error => next(error))
 })
@@ -59,7 +59,7 @@ app.put('/api/persons/:id', (req, res, next) => {
 
 app.delete('/api/persons/:id', (req, res, next) => {
 	Contact.findByIdAndRemove(req.params.id)
-		.then(result => {
+		.then(() => {
 			res.status(204).end()
 		})
 		.catch(error => next(error))
@@ -79,8 +79,6 @@ const errorHandler = (error, request, response, next) => {
 			return response.status(400).send({ error: 'malformatted id' })
 		case 'ValidationError':
 			return response.status(400).send({ error: error.message })
-		default:
-			break;
 	}
 
 	next(error)
@@ -89,7 +87,7 @@ const errorHandler = (error, request, response, next) => {
 app.use(errorHandler)
 
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
-	console.log(`Server running on port ${PORT}`);
+	console.log(`Server running on port ${PORT}`)
 })
