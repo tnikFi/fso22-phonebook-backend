@@ -1,7 +1,11 @@
-const express = require('express');
-const app = express();
+const express = require('express')
+const morgan = require('morgan')
+const app = express()
+
+morgan.token('body', (req, res) => req.method === 'POST' ? JSON.stringify(req.body) : '')
 
 app.use(express.json())
+app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'))
 
 const generateId = () => Math.round(Math.random()*1e10)
 
@@ -41,10 +45,12 @@ app.get('/api/persons', (req, res) => {
 app.post('/api/persons', (req, res) => {
 	const body = req.body
 
-	console.log(body);
-
-	if (!body.name) {
+	if (!body.name || !body.number) {
 		return res.status(400).json({error: 'content missing'})
+	}
+
+	if (data.persons.find(person => person.name === body.name)) {
+		return res.status(403).json({error: 'name must be unique'})
 	}
 
 	const contact = {
